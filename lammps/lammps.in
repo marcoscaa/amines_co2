@@ -1,0 +1,28 @@
+#Initialization
+units metal
+dimension 3
+atom_style atomic #Atomic system with charges
+
+read_data conf.lmp
+#read_restart lammps.restart
+
+#Interatomic potentials - DeepMD 
+pair_style	deepmd graph.pb 
+pair_coeff * * deepmd
+
+#MD parameters
+timestep 0.001 #ps 
+velocity all create 300 1815191 mom yes rot yes dist gaussian 
+
+#Run MD - equil at 330K
+run_style verlet #Velocity verlet
+fix 1 all plumed plumedfile plumed.in outfile plumed.out
+fix 2 all npt temp 300 300 0.1 iso 1 1 1 
+thermo 100 #Ouputing thermodynamic properties
+dump 1 all atom 100 pos.lammpstrj
+dump_modify 1 append yes
+#dump 2 all custom 100 vel.xyz id type vx vy vz
+timer timeout 12:00:00 every 100
+run 10000000 
+
+write_restart lammps.restart
